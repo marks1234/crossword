@@ -2,7 +2,10 @@ function findLen(arr, num) {
     if (parseInt(arr[num]) > 0) {
         let newArray = arr.slice(num);
         let index = newArray.indexOf(".");
-        newArray = newArray.slice(0, index);
+        if (index != -1)
+            newArray = newArray.slice(0, index);
+        if (newArray.length == 1)
+            return 0;
         return newArray.length;
     }
     return 0;
