@@ -111,6 +111,7 @@ const wordsErr6 = 123;
 const puzzleErr7 = "2000\n0...\n0...\n0...";
 const wordsErr7 = ["abba", "assa"];
 
+
 function crosswordSolver(crsWd, wds) {
 	if (inputValid(crsWd, wds)) {
 	} else {
@@ -119,10 +120,6 @@ function crosswordSolver(crsWd, wds) {
 }
 
 function inputValid(crsWd, wds) {
-	//console.log(dataTypesOk(crsWd, wds));
-	//console.log(noDoublewords(wds));
-	//console.log(noIllegalSymbols(crsWd));
-	//console.log(notMalformedBoard(crsWd, wds));
 
 	if (dataTypesOk(crsWd, wds)) {
 		if (
@@ -141,7 +138,6 @@ function dataTypesOk(crsWd, wds) {
 		return false;
 	}
 
-	//console.log("type: ",typeof crsWd)
 	if (typeof crsWd != "string") {
 		return false;
 	}
@@ -166,7 +162,6 @@ function noDoublewords(wds) {
 
 //checks if board has only legal symbols
 function noIllegalSymbols(str) {
-	// console.log(typeof str);
 	let regX = /[^\n.0-2]/g;
 	let check = str.match(regX);
 	if (check === null) {
@@ -183,7 +178,7 @@ function noIllegalSymbols(str) {
 //and only 3 words with same start char, its faulty
 function notMalformedBoard(crsWd, wds) {
 	let nums = [];
-	const regX = /[1-9]/g;
+	const regX = /[1-2]/g;
 	let count = 0;
 	nums = crsWd.match(regX);
 	//theoretically, this is not ideal, as the numbers are sorted as strings. 12 smaller that 2.
@@ -194,7 +189,7 @@ function notMalformedBoard(crsWd, wds) {
 
 	nums.sort();
 	for (let i = 0; i < nums.length; i++) {
-		nums[i] = Number.parseInt(nums[i]);
+		nums[i] = parseInt(nums[i]);
 	}
 	let words = 0;
 	for (let i = 0; i < nums.length; i++) {
@@ -205,18 +200,10 @@ function notMalformedBoard(crsWd, wds) {
 		return false;
 	}
 
-	for (let i = 0; i < nums.length; ) {
-		if (nums[i] > 4) {
-			return false;
-		}
-
-		return true;
-	}
-
 	//remove 1-s as these are not applicable for following search
-	for (let i = 0; i < nums.length; ) {
+	for (let i = 0; i < nums.length;) {
 		if (nums[i] === 1) {
-			nums.splice(i, 0);
+			nums.splice(i, 1);
 		} else {
 			i++;
 		}
@@ -224,14 +211,8 @@ function notMalformedBoard(crsWd, wds) {
 	//also duplicate entries
 	nums = [...new Set(nums)];
 
-	for (let i = 0; i < nums.length; i++) {
-		if (nums[i] > 2) {
-			return false;
-		}
-	}
-
 	//start from the end, the biggest number
-	for (let i = nums.length; i > 0; ) {
+	for (let i = nums.length; i > 0; i--) {
 		if (checkOneStartAmount(nums[i], wds) == false) {
 			return false;
 		}
@@ -241,8 +222,9 @@ function notMalformedBoard(crsWd, wds) {
 
 //if there are less words with same starting letter, than required at crossword start spot, the puzzle is unsolvable
 function checkOneStartAmount(num, wds) {
+
 	for (let a = 0; a < wds.length; a++) {
-		count = 1;
+		let count = 1;
 		for (let u = 0; u < wds.length; u++) {
 			if (a !== u && wds[a][0] === wds[u][0]) {
 				count++;
