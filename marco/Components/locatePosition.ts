@@ -17,7 +17,7 @@ function findLen(arr: string[], num: number) {
 	return 0;
 }
 
-function transpose(matrix: any) {
+export function transpose(matrix: any) {
 	return matrix[0].map((_: any, colIndex: any) =>
 		matrix.map((row: any) => row[colIndex])
 	);
@@ -42,7 +42,7 @@ function findNumbers(arr: string[][]) {
 	return list_out;
 }
 
-export default function findNumber(arr: string[][], x: number, y: number) {
+export function findNumber(arr: string[][], x: number, y: number) {
 	if (arr[y][x] != ".") {
 		const size = parseInt(arr[y][x]);
 		return <NumberNode>{

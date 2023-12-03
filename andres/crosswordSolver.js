@@ -111,7 +111,6 @@ const wordsErr6 = 123;
 const puzzleErr7 = "2000\n0...\n0...\n0...";
 const wordsErr7 = ["abba", "assa"];
 
-
 function crosswordSolver(crsWd, wds) {
 	if (inputValid(crsWd, wds)) {
 	} else {
@@ -119,8 +118,7 @@ function crosswordSolver(crsWd, wds) {
 	}
 }
 
-function inputValid(crsWd, wds) {
-
+export default function inputValid(crsWd, wds) {
 	if (dataTypesOk(crsWd, wds)) {
 		if (
 			noDoublewords(wds) &&
@@ -201,7 +199,7 @@ function notMalformedBoard(crsWd, wds) {
 	}
 
 	//remove 1-s as these are not applicable for following search
-	for (let i = 0; i < nums.length;) {
+	for (let i = 0; i < nums.length; ) {
 		if (nums[i] === 1) {
 			nums.splice(i, 1);
 		} else {
@@ -222,7 +220,6 @@ function notMalformedBoard(crsWd, wds) {
 
 //if there are less words with same starting letter, than required at crossword start spot, the puzzle is unsolvable
 function checkOneStartAmount(num, wds) {
-
 	for (let a = 0; a < wds.length; a++) {
 		let count = 1;
 		for (let u = 0; u < wds.length; u++) {

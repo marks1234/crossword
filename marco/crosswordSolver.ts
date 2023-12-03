@@ -1,39 +1,14 @@
 import mapThePuzzle from "./Components/puzzleMapping.js";
-import findNumber from "./Components/locatePosition.js";
+import { findNumber, transpose } from "./Components/locatePosition.js";
 import links from "./scrapHeap.js";
+import inputValid from "./ErrorChecker/errorsAplently.js";
 
 const puzzle = "20110\n0.00.\n1000.\n0..0.";
-const words = ["caset", "elan", "ciao", "anta", "set"];
+const words = ["caset", "elan", "ciao", "anta", "set"].reverse();
+
 var puzzleMap: string[][];
 var linkMap: Map<number, Map<number, boolean>>;
-
-// const puzzle = `...1...........
-// ..1000001000...
-// ...0....0......
-// .1......0...1..
-// .0....100000000
-// 100000..0...0..
-// .0.....1001000.
-// .0.1....0.0....
-// .10000000.0....
-// .0.0......0....
-// .0.0.....100...
-// ...0......0....
-// ..........0....`;
-// const words = [
-// 	"sun",
-// 	"sunglasses",
-// 	"suncream",
-// 	"swimming",
-// 	"bikini",
-// 	"beach",
-// 	"icecream",
-// 	"tan",
-// 	"deckchair",
-// 	"sand",
-// 	"seaside",
-// 	"sandals",
-// ];
+const output: string[][][] = [];
 
 interface NumberNode {
 	x: number;
@@ -43,7 +18,7 @@ interface NumberNode {
 	down?: number;
 }
 
-function handleError(condition: string) {
+function handleError(condition: string | undefined) {
 	if (condition == undefined) throw new Error("Undefined error");
 	throw new Error(`The following condition has not been met:\n${condition}`);
 }
@@ -76,15 +51,90 @@ function placeWord(
 	return o_matrix;
 }
 
+function wordPlaced(start: number, arr: string[], leng: number | undefined) {
+	if (leng == undefined) {
+		return false;
+	}
+	for (let x = 0; x < leng; x++) {
+		if (arr[start + x] == ".") return false;
+	}
+	return true;
+}
+
+function findNextLocation(
+	position_info: NumberNode,
+	isHorizontalPlaced: boolean,
+	isVerticalPlaced: boolean
+) {
+	let { x, y } = position_info;
+	if (position_info.size == 2 && isHorizontalPlaced && !isVerticalPlaced) {
+		return { x_out: x, y_out: y };
+	}
+
+	if (x + 1 < puzzleMap[y].length) {
+		x++;
+	} else if (x + 1 == puzzleMap[y].length) {
+		x = 0;
+		if (y + 1 == puzzleMap.length) {
+			return { x_out: undefined, y_out: undefined };
+		} else {
+			y++;
+		}
+	}
+	return { x_out: x, y_out: y };
+}
+const loopFiltered = (
+	x: number,
+	y: number,
+	words: string[],
+	filtered_words: string[],
+	o_matrix: string[][],
+	verticals: boolean
+) => {
+	let position_info = findNumber(puzzleMap, x, y);
+	for (const word of filtered_words) {
+		placeWord(o_matrix, word, position_info.x, position_info.y, verticals);
+
+		const updated_o_matrix = JSON.parse(JSON.stringify(o_matrix));
+		const updated_words = words.filter((element) => element != word);
+		let horizontal = wordPlaced(x, updated_o_matrix[y], position_info.right);
+		let vertical = wordPlaced(
+			y,
+			transpose(updated_o_matrix)[x],
+			position_info.down
+		);
+		let { x_out, y_out } = findNextLocation(
+			position_info,
+			horizontal,
+			vertical
+		);
+		// console.log(x_out, y_out);
+		// console.log(x_out !== undefined && y_out !== undefined);
+		if (x_out !== undefined && y_out !== undefined)
+			recursive(x_out, y_out, updated_o_matrix, updated_words);
+
+		// words = words.filter((element) => element != filtered_words_h[0]);
+	}
+};
+
 function recursive(
 	x: number,
 	y: number,
 	o_matrix: string[][],
 	words: string[]
 ) {
+	if (words.length == 0) {
+		output.push(o_matrix);
+		return o_matrix;
+	}
 	let position_info = findNumber(puzzleMap, x, y);
-	// ALERT
-	// some logic to continue if position_info.size == -1
+
+	if (position_info.size <= 0) {
+		let { x_out, y_out } = findNextLocation(position_info, false, false);
+		if (x_out !== undefined && y_out !== undefined)
+			recursive(x_out, y_out, o_matrix, words);
+	}
+
 	let filtered_words_h = words.filter((word, index) => {
 		if (word.length != position_info?.right) return false;
 		let can_place = false;
@@ -92,8 +142,6 @@ function recursive(
 			const pos_x = position_info.x + x;
 			const pos_y = position_info.y;
 
-			console.log("word[x] ", word[x]);
-			console.log("o_matrix[pos_y][pos_x]", o_matrix[pos_y][pos_x]);
 			if (o_matrix[pos_y][pos_x] == ".") can_place = true;
 
 			if (linkMap.get(pos_x)?.get(pos_y)) {
@@ -104,14 +152,14 @@ function recursive(
 		return can_place;
 	});
 	let filtered_words_v = words.filter((word, index) => {
-		if (word == "sun") console.log("sun");
-		if (word.length == 3) console.log(word);
 		if (word.length != position_info?.down) return false;
 		let can_place = false;
 		for (let y = 0; y < word.length; y++) {
 			const pos_x = position_info.x;
 			const pos_y = position_info.y + y;
+
 			if (o_matrix[pos_y][pos_x] == ".") can_place = true;
+
 			if (linkMap.get(pos_x)?.get(pos_y)) {
 				if (o_matrix[pos_y][pos_x] != ".")
 					if (word[y] != o_matrix[pos_y][pos_x]) return false;
@@ -120,58 +168,39 @@ function recursive(
 
 		return can_place;
 	});
-	console.log("h ", filtered_words_h);
-	console.log("v ", filtered_words_v);
-	if (filtered_words_h.length > 0) {
-		let any = placeWord(
-			o_matrix,
-			filtered_words_h[0],
-			position_info.x,
-			position_info.y,
-			false
-		);
 
-		words = words.filter((element) => element != filtered_words_h[0]);
-		for (const a of any) {
-			console.log(JSON.stringify(a));
-		}
+	const updated_o_matrix = JSON.parse(JSON.stringify(o_matrix));
+	if (filtered_words_h.length > 0) {
+		loopFiltered(x, y, words, filtered_words_h, updated_o_matrix, false);
 	} else if (filtered_words_v.length > 0) {
-		let any = placeWord(
-			o_matrix,
-			filtered_words_v[0],
-			position_info.x,
-			position_info.y,
-			true
-		);
-		words = words.filter((element) => element != filtered_words_v[0]);
-		for (const a of any) {
-			console.log(JSON.stringify(a));
-		}
+		loopFiltered(x, y, words, filtered_words_v, updated_o_matrix, true);
 	}
-	return words;
 }
 
-function crosswordSolver(puzzle: string, words: Array<string>) {
+function crosswordSolver(puzzle: any, words: any) {
 	puzzleMap = mapThePuzzle(puzzle);
 
 	linkMap = links(puzzleMap);
 	const o_matrix = duplicateMatrixSize(puzzleMap[0].length, puzzleMap.length);
-
-	// console.log(puzzle);
-	// console.log(words);
-	// console.log(links(puzzleMap));
-	// console.log(findNumber(puzzleMap, 0, 0));
-	let t = recursive(0, 0, o_matrix, words);
-	t = recursive(0, 0, o_matrix, t);
-	t = recursive(2, 0, o_matrix, t);
-	t = recursive(3, 0, o_matrix, t);
-	t = recursive(0, 2, o_matrix, t);
-	// t = recursive(12, 3, o_matrix, t);
-	// t = recursive(6, 4, o_matrix, t);
-	// t = recursive(0, 5, o_matrix, t);
-	// t = recursive(7, 6, o_matrix, t);
-	// t = recursive(10, 6, o_matrix, t);
-	// console.log(list);
+	if (inputValid(puzzle, words)) {
+		recursive(0, 0, o_matrix, words);
+		if (output.length == 1) {
+			console.log(words);
+			output.forEach((matrix) => {
+				console.log(
+					"---------------------------------------------------------"
+				);
+				for (const a of matrix) {
+					console.log(JSON.stringify(a));
+				}
+				console.log(
+					"---------------------------------------------------------"
+				);
+			});
+		} else console.log("Error");
+	} else {
+		console.log("Error");
+	}
 }
 
 crosswordSolver(puzzle, words);

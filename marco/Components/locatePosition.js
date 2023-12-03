@@ -10,7 +10,7 @@ function findLen(arr, num) {
     }
     return 0;
 }
-function transpose(matrix) {
+export function transpose(matrix) {
     return matrix[0].map((_, colIndex) => matrix.map((row) => row[colIndex]));
 }
 function findNumbers(arr) {
@@ -31,7 +31,7 @@ function findNumbers(arr) {
     }
     return list_out;
 }
-export default function findNumber(arr, x, y) {
+export function findNumber(arr, x, y) {
     if (arr[y][x] != ".") {
         const size = parseInt(arr[y][x]);
         return {
